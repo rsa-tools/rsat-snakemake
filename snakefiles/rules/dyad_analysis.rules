@@ -1,0 +1,76 @@
+
+
+# Check/set parameters
+if not "qsub" in config.keys():
+    sys.exit("The parameter qsub must be defined in the config file")
+
+if not "dyad-analysis" in config.keys():
+    config["dyad-analysis"] = {}
+
+#if not "motif_db" in config["dyad-analysis"].keys():
+#    sys.exit("The parameter peak-motif:motif_db must be defined in the config file")
+
+# if not "python" in config["dyad-analysis"].keys():
+#     config["dyad-analysis"]["python"] = "python2"
+# 
+# if not "motif_db" in config["dyad-analysis"].keys():
+#     config["dyad-analysis"]["motif_db"] = ""
+#     
+# if not "server" in config["dyad-analysis"].keys():
+#     config["dyad-analysis"]["server"] = "teaching"
+# 
+# if not "tasks" in config["dyad-analysis"].keys():
+#     config["dyad-analysis"]["tasks"] = "all"
+# 
+# if not "disco" in config["dyad-analysis"].keys():
+#     config["dyad-analysis"]["disco"] =  ""
+
+# Rule
+rule dyad_analysis:
+    """Motif discovery using the dyad-analysis pipeline.
+
+    Find out more @ http://floresta.eead.csic.es/rsat/help.dyad-analysis.html
+
+    Required parameters:
+        config["qsub"]
+        config["dyad-analysis"]["motif_db"]
+
+    Optional parameters:
+        config["dyad-analysis"]["tasks"]
+        config["dyad-analysis"]["disco"]
+
+    Contributors: Claire Rioualen, Jacques van Helden 
+    """
+    input:
+        fasta = "{dir}/{TF}_{sites}.fasta"
+    output: 
+#        zip = "{dir}/dyad-analysis/{sites}_dyad-analysis.zip",
+        txt = "{dir}/dyad-analysis/{TF}_{sites}_report.txt",
+        # matrices = "{dir}/dyad-analysis/results/discovered_motifs/{TF}_{sites}_motifs_discovered.tf"
+    params:
+        # python = config["dyad-analysis"]["python"],
+        # python_script = "SnakeChunks/scripts/python_lib/dyad-analysis_soap.py",
+        # title = config["title"],
+        # #bed_ctrl = "{dir}_peaks.bed", \
+        # tasks = config["dyad-analysis"]["tasks"], \
+        # server = config["dyad-analysis"]["server"], \
+        # disco = config["dyad-analysis"]["disco"], \
+        # motif_db = config["dyad-analysis"]["motif_db"], \
+        # outdir = "{dir}/dyad-analysis", \
+        # prefix = "{TF}_{sites}", \
+        qsub = config["qsub"] + " -e {dir}/dyad-analysis/{TF}_{sites}_qsub.err" \
+                  + " -o {dir}/dyad-analysis/{TF}_{sites}_qsub.out" 
+    log: "{dir}/dyad-analysis/{TF}_{sites}_dyad-analysis.log"
+    benchmark: "{dir}/dyad-analysis/{TF}_{sites}_dyad-analysis_benchmark.txt"
+    conda: "../envs/peakmotifs.yaml"
+    shell:"""
+purge-sequence -i {input.fasta} -format fasta -o {input.fasta}.purged;
+dyad-analysis -i {input.fasta}.purged -v 1 -quick -sort -timeout 3600  -type any -2str -noov -lth occ 0 -uth occ 1 -lth occ_sig 0 -uth rank 50 -return occ,proba,rank -l 3 -spacing 0-20 > {output.txt}
+
+"""
+
+# purge-sequence -i peaks/CpxR/CpxR_BS.fasta -format fasta -o peaks/CpxR/CpxR_BS.fasta.purged;
+# dyad-analysis -i peaks/CpxR/CpxR_BS.fasta.purged -v 1 -quick -sort -timeout 3600  -type any -2str -noov -lth occ 0 -uth occ 1 -lth occ_sig 0 -uth rank 50 -return occ,proba,rank -l 3 -spacing 0-20
+
+
+

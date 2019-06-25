@@ -1,0 +1,32 @@
+# Set parameters
+if not "qsub" in config.keys():
+    sys.exit("The parameter qsub must be defined in the config file")
+
+if not "regulonDB" in config["dir"].keys():
+   config["dir"]["regulonDB"] = "RegulonDB"
+
+# Rule
+rule RegulonDB_download_one_TF:
+    """Get TFBS and PSSM from RegulonDB webservice for a given TF or list of TFs.
+        
+    Required parameters:
+        config["qsub"]
+        config["metadata"]["TF"] 
+
+    Author: Claire Rioualen
+    """
+    input: 
+        all_tfbs = config["dir"]["regulonDB"] + "/BindingSiteSet.bed"
+    output: 
+        selected_tfbs="{dir}/{TF}/{TF}_sites.bed"
+    params: qsub = config["qsub"] + " -e {dir}/{TF}/{TF}_BS_qsub.err -o {dir}/{TF}/{TF}_BS_qsub.out"
+    log: "{dir}/{TF}/{TF}_BS.log"
+    benchmark: "{dir}/{TF}/{TF}_BS_benchmark.tab"
+    #conda: "../bedtools.yaml"
+    shell:"""
+    awk '$7 == "{wildcards.TF}"' {input.all_tfbs} > {output.selected_tfbs}
+    #wget http://regulondb.ccg.unam.mx/webresources/tools/getTFBS?tfObject={wildcards.TF}&extended=10
+    #mv getTFBS?tfObject={wildcards.TF} {output.selected_tfbs}
+"""
+    # awk '$4 == "{wildcards.TF}"' {input.all_tfbs} > temp
+    # bedtools slop -b 5 -i temp -g  > {output.selected_tfbs}

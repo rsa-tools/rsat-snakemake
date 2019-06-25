@@ -1,0 +1,157 @@
+"""
+Author: Claire Rioualen
+Contact: rioualen@ccg.unam.mx
+
+"""
+
+#================================================================#
+#                       Python Imports 
+#================================================================#
+
+from snakemake.utils import R
+import os
+import sys
+import datetime
+import re
+import pandas as pd
+from pathlib import Path
+
+
+# 
+# include: os.path.join(GENEREG_LIB, "scripts/python_lib/util.py")
+
+
+#================================================================#
+#           Variables & directories
+#================================================================#
+
+# Genome & annotations
+# GENOME_DIR = config["dir"]["genome"]
+# GENOME_FASTA = os.path.join(GENOME_DIR, config["genome"]["fasta_file"])
+# GENOME_GFF3 = os.path.join(GENOME_DIR, config["genome"]["gff3_file"])
+# GENOME_GTF = os.path.join(GENOME_DIR, config["genome"]["gtf_file"])
+
+# TF
+#TF_LIST = read_table(config["metadata"]["tf_list"])['TF']
+TF_LIST = config["metadata"]["TF"]
+
+
+#================================================================#
+#               Snakemake rules
+#================================================================#
+
+wd = os.getcwd()
+
+RULES = os.path.join(wd, "rsat-snakemake", "snakefiles/rules")
+
+
+include: os.path.join(RULES, "dot_graph.rules")
+include: os.path.join(RULES, "dot_to_image.rules")
+include: os.path.join(RULES, "dyad_analysis.rules")
+include: os.path.join(RULES, "getfasta.rules")
+include: os.path.join(RULES, "matrix_quality.rules")
+include: os.path.join(RULES, "matrix_clustering.rules")
+include: os.path.join(RULES, "peak_motifs.rules")
+include: os.path.join(RULES, "peaks_vs_tfbs.rules")
+include: os.path.join(RULES, "regulondb_download.rules")
+include: os.path.join(RULES, "regulondb_download_one_tf.rules")
+include: os.path.join(RULES, "regulondb_get_matrix.rules")
+
+
+#================================================================#
+#                         Workflow                               #
+#================================================================#
+
+
+
+# ----------------------------------------------------------------
+# Peak-calling
+# ----------------------------------------------------------------
+
+
+# PEAKS       = expand(PEAKS_DIR + "/{TF}/{TF}_peaks.bed", TF=TF_LIST)
+# GET_FASTA   = expand(PEAKS_DIR + "/{TF}/{TF}_peaks.fasta", TF=TF_LIST)
+# 
+# PEAK_MOTIFS_ALL     = expand(PEAKS_DIR + "/{TF}/peak-motifs/{TF}_peaks_synthesis.html", TF=TF_LIST)
+# 
+
+DATA_DIR = config["dir"]["regulondb"]
+
+REGULONDB_TF_SITES  = expand(DATA_DIR + "/{TF}/{TF}_sites.fasta", TF=TF_LIST)
+REGULONDB_TF_MATRIX = expand(DATA_DIR + "/{TF}/{TF}_matrix.tf", TF=TF_LIST)
+
+DYAD     = expand(DATA_DIR + "/{TF}/dyad-analysis/{TF}_sites_report.txt", TF=TF_LIST)
+
+#TF_SITES  = expand("RegulonDB/{TF}/{TF}_sites.bed", TF=TREATMENT)
+#TFBS_MATCHING_PEAKS       = expand(expand(PEAKS_DIR + "/{TF}_vs_{control}/{{peakcaller}}/{TF}_vs_{control}_{{prefix}}_{{peakcaller}}_vs_{{TF}}_matching_peaks.bed", zip, TF=TREATMENT, control=CONTROL), peakcaller=PEAKCALLING_TOOLS, prefix=PREFIX, TF=config["metadata"]["TF"].split())
+#PEAK_MATCHING_TFBS       = expand(expand(PEAKS_DIR + "/{TF}_vs_{control}/{{peakcaller}}/{TF}_vs_{control}_{{prefix}}_{{peakcaller}}_vs_{{TF}}_matching_sites.bed", zip, TF=TREATMENT, control=CONTROL), peakcaller=PEAKCALLING_TOOLS, prefix=PREFIX, TF=config["metadata"]["TF"].split())
+#PEAKS_VS_TFBS       = TFBS_MATCHING_PEAKS + PEAK_MATCHING_TFBS
+
+# PEAKS_DIR = ""
+# 
+# SITES_FOUND          = expand(PEAKS_DIR + "/{TF}/found/{TF}_sites_found.fasta", TF=TF_LIST)
+# PEAKS_FOUND          = expand(PEAKS_DIR + "/{TF}/found/{TF}_peaks_found.fasta", TF=TF_LIST)
+# SITES_NOT_FOUND      = expand(PEAKS_DIR + "/{TF}/not_found/{TF}_sites_not_found.fasta", TF=TF_LIST)
+# SEQ_NOT_FOUND        = expand(PEAKS_DIR + "/{TF}/not_found/{TF}_seq_not_found.fasta", TF=TF_LIST)
+# PEAKS_NEW            = expand(PEAKS_DIR + "/{TF}/new/{TF}_peaks_new.fasta", TF=TF_LIST)
+# 
+# SITES_VS_PEAKS      = SITES_FOUND + SITES_NOT_FOUND + PEAKS_NEW + PEAKS_FOUND + SEQ_NOT_FOUND
+# 
+# MATRIX_QUALITY      = expand(PEAKS_DIR + "/{TF}/matrix-quality/{TF}_synthesis.html", TF=TF_LIST)
+# MATRIX_CLUSTERING   = expand(PEAKS_DIR + "/{TF}/matrix-clustering/{TF}_peaks_SUMMARY.html", TF=TF_LIST)
+# 
+# PEAK_MOTIFS_FOUND     = expand(PEAKS_DIR + "/{TF}/found/peak-motifs/{TF}_peaks_found_synthesis.html", TF=TF_LIST)
+# PEAK_MOTIFS_NOT_FOUND = expand(PEAKS_DIR + "/{TF}/not_found/peak-motifs/{TF}_seq_not_found_synthesis.html", TF=TF_LIST)
+# PEAK_MOTIFS_NEW       = expand(PEAKS_DIR + "/{TF}/new/peak-motifs/{TF}_peaks_new_synthesis.html", TF=TF_LIST)
+# PEAK_MOTIFS_COMPARE   = PEAK_MOTIFS_FOUND + PEAK_MOTIFS_NOT_FOUND + PEAK_MOTIFS_NEW
+# 
+# MATRIX_CLUSTERING_FOUND     = expand(PEAKS_DIR + "/{TF}/found/matrix-clustering/{TF}_peaks_found_SUMMARY.html", TF=TF_LIST)
+# MATRIX_CLUSTERING_NOT_FOUND = expand(PEAKS_DIR + "/{TF}/not_found/matrix-clustering/{TF}_seq_not_found_SUMMARY.html", TF=TF_LIST)
+# MATRIX_CLUSTERING_NEW       = expand(PEAKS_DIR + "/{TF}/new/matrix-clustering/{TF}_peaks_new_SUMMARY.html", TF=TF_LIST)
+# MATRIX_CLUSTERING_COMPARE   = MATRIX_CLUSTERING_FOUND + MATRIX_CLUSTERING_NOT_FOUND + MATRIX_CLUSTERING_NEW
+
+# MATRIX_QUALITY_FOUND     = expand(PEAKS_DIR + "/{TF}/found/matrix-quality/{TF}_peaks_found_synthesis.html", TF=TF_LIST)
+# MATRIX_QUALITY_NOT_FOUND = expand(PEAKS_DIR + "/{TF}/not_found/matrix-quality/{TF}_seq_not_found_synthesis.html", TF=TF_LIST)
+# MATRIX_QUALITY_NEW       = expand(PEAKS_DIR + "/{TF}/new/matrix-quality/{TF}_peaks_new_synthesis.html", TF=TF_LIST)
+# MATRIX_QUALITY_COMPARE   = MATRIX_QUALITY_FOUND + MATRIX_QUALITY_NOT_FOUND + MATRIX_QUALITY_NEW
+
+
+# MATRIX_CLUSTERING   = expand(expand(PEAKS_DIR + "/{TF}_vs_{control}/matrix-clustering/{TF}_vs_{control}_{{prefix}}_matrix-clustering_SUMMARY.html", zip, TF=TREATMENT, control=CONTROL), peakcaller=PEAKCALLING_TOOLS, prefix=PREFIX)
+# 
+# MATRIX_QUALITY      = expand(expand(PEAKS_DIR + "/{TF}_vs_{control}/new-matrix-quality/{TF}_vs_{control}_{{prefix}}_synthesis.html", zip, TF=["LexA", "CpxR", "TyrR", "HNS", "OmpR"], control=CONTROL), prefix=PREFIX)
+
+# ----------------------------------------------------------------
+# Flowcharts
+# ----------------------------------------------------------------
+
+GRAPHICS = expand("flowcharts/ChIP-seq_{graph}.{ext}", graph=["dag", "rulegraph"], ext=["png", "pdf", "svg"])
+
+
+
+#================================================================#
+#                        Rule all                                #
+#================================================================#
+
+rule all:
+	"""
+	Run analyses.
+	"""
+	input: \
+            REGULONDB_TF_SITES,
+#            GET_FASTA,
+#            PEAKS_MERGED,
+#            SITES_VS_PEAKS,
+#            REGULONDB_TF_MATRIX,
+#            PEAK_MOTIFS_ALL,
+			 DYAD,
+#            MATRIX_QUALITY,
+#            MATRIX_CLUSTERING,
+#            PEAK_MOTIFS_COMPARE,
+#            MATRIX_CLUSTERING_COMPARE,
+#            MATRIX_QUALITY_COMPARE,
+#            GRAPHICS
+	params: qsub=config["qsub"]
+	shell: "echo Job done    `date '+%Y-%m-%d %H:%M'`"
+
+
+

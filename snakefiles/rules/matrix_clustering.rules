@@ -1,0 +1,45 @@
+# Check/set parameters
+if not "qsub" in config.keys():
+    sys.exit("The parameter qsub must be defined in the config file")
+
+if not "matrix-clustering" in config.keys():
+    config["matrix-clustering"] = {}
+
+# Rule
+rule matrix_clustering:
+    """Motif discovery using the peak-motifs pipeline.
+
+    Find out more @ http://floresta.eead.csic.es/rsat/help.peak-motifs.html
+
+    Required parameters:
+        config["qsub"]
+
+    Optional parameters:
+        ...
+
+    Contributors: Claire Rioualen
+    """
+    input: 
+        matrices = "{dir}/peak-motifs/results/discovered_motifs/{TF}_{peaks}_motifs_discovered.tf"
+    output: 
+        html = "{dir}/matrix-clustering/{TF}_{peaks}_SUMMARY.html"
+    params:
+        prefix = "{dir}/matrix-clustering/{TF}_{peaks}",
+        qsub = config["qsub"] + " -e {dir}/matrix-clustering/{TF}_{peaks}_matrix-clustering_qsub.err" \
+                  + " -o {dir}/matrix-clustering/{TF}_{peaks}_matrix-clustering_qsub.out" 
+    log: "{dir}/matrix-clustering/{TF}_{peaks}_matrix-clustering.log"
+    benchmark: "{dir}/matrix-clustering/{TF}_{peaks}_matrix-clustering_bench.txt"
+    shell: """
+($RSAT/perl-scripts/matrix-clustering \
+-v 1 -max_matrices 300 -matrix {wildcards.TF}_peakmotifs \
+{input.matrices} transfac \
+-hclust_method average -calc sum -title '{wildcards.TF}' -metric_build_tree 'Ncor' -lth w 5 -lth cor 0.6 -lth Ncor 0.4 \
+-quick -label_in_tree name -return json,heatmap \
+-o {params.prefix} ) 2> {log} \
+|| touch {output.html}
+
+"""
+
+# $RSAT/perl-scripts/matrix-clustering  -v 1 -max_matrices 300 -matrix cysb peaks/CysB/peak-motifs/results/discovered_motifs/CysB_motifs_discovered.tf transfac \
+# -hclust_method average -calc sum -title 'cysb_test' -metric_build_tree 'Ncor' -lth w 5 -lth cor 0.6 -lth Ncor 0.4 -quick -label_in_tree name -return json,heatmap \
+# -o test/matrix-clustering

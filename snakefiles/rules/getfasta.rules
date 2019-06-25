@@ -1,0 +1,34 @@
+# Set parameters
+if not "qsub" in config.keys():
+    sys.exit("The parameter qsub must be defined in the config file")
+
+if not "fasta_file" in config["genome"].keys():
+    sys.exit("Fasta file must be defined in the config file")
+
+if not "genome" in config["dir"].keys():
+    sys.exit("Genome dir must be defined in the dir section of the config file")
+
+fasta_file = os.path.join(config["dir"]["genome"], config["genome"]["fasta_file"])
+
+# Rule
+rule getfasta:
+    """Get fasta from bed file using the bedtools suite.
+        
+    Required parameters:
+        config["qsub"]
+        config["dir"]["genome"] 
+        config["genome"]["fasta_file"]
+
+    Contributors: Claire Rioualen
+    """
+    input: bed = "{regions}.bed", genome_fasta = fasta_file
+    output: "{regions}.fasta"
+    params: qsub = config["qsub"] + " -e {regions}_getfasta_qsub.err -o {regions}_getfasta_qsub.out"
+    log: "{regions}_getfasta.log"
+    benchmark: "{regions}_getfasta_benchmark.txt"
+    conda: "../envs/bedtools.yaml"
+    shell:"""
+(bedtools sort -i {input.bed} > {input.bed}.temp &&
+mv {input.bed}.temp {input.bed} &&
+bedtools getfasta -fi {input.genome_fasta} -bed {input.bed} -fo {output} -s -name) 2> {log}"""
+

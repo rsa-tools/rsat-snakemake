@@ -1,0 +1,40 @@
+# Check parameters
+if not "qsub" in config.keys():
+    sys.exit("The parameter qsub must be defined in the config file")
+
+if not "configfile" in config["metadata"].keys():
+    sys.exit("The parameter ['metadata']['configfile'] must be defined in the config file")
+
+
+# Rule
+rule dot_graph:
+    """This rule generates dot files for snakemake's DAG and rulegraph. 
+
+    Required parameter: 
+        config["metadata"]["configfile"]
+
+    Contributors: Claire Rioualen, Jacques van Helden
+    """
+    output: "{path}{graph,(rulegraph|dag)}.dot"
+    params: 
+        snakefile = workflow.snakefile,
+        configfile = config["metadata"]["configfile"],  #snakemake.config, #
+        qsub = config["qsub"] \
+          + " -e {path}{graph}_dot_qsub.err" \
+          + " -o {path}{graph}_dot_qsub.out"
+    log: "{path}{graph}_dot.log"
+    benchmark: "{path}{graph}_dot_benchmark.txt"
+    conda: "../envs/graphviz.yaml"
+    shell: """
+(snakemake -s {params.snakefile}  --configfile {params.configfile} --{wildcards.graph} > {output}
+if [ "{wildcards.graph}" = "dag" ]
+then 
+    echo "this is a dag"
+    cat {output} | perl -pe 's/graph\[/graph\[rankdir='LR', /' > tempfile
+    mv tempfile {output}
+else
+    echo "this is a rulegraph"
+fi 
+sed -n '/digraph/,$p' <{output} > tmp
+mv tmp {output}) &> {log}
+"""

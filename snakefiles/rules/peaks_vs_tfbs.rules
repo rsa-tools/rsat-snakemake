@@ -1,0 +1,44 @@
+# Set parameters
+if not "qsub" in config.keys():
+    sys.exit("The parameter qsub must be defined in the config file")
+
+if not "gff3_file" in config["genome"].keys():
+    sys.exit("GFF3 file must be defined in the config file")
+
+if not "genome" in config["dir"].keys():
+    sys.exit("Genome dir must be defined in the dir section of the config file")
+
+# Define paths
+if not "regulondb" in config["dir"].keys():
+    sys.exit("Parameters config['dir']['regulondb'] must be defined in the config file to compare peaks with reference TFBS.")
+
+
+# Rule
+rule peaks_vs_tfbs:
+    """
+    Compare ChIP-seq peaks with reference transcription factor binding sites (TFBS) using bedtools intersect.
+
+    More: http://bedtools.readthedocs.io/en/latest/content/tools/intersect.html
+
+    Required parameters: 
+        config["qsub"]
+        config["dir"]["genome"]
+        config["genome"]["gff3_file"]
+
+    Contributors: Claire Rioualen
+    """
+	input: 
+            peaks = "{peaks}.bed", 
+            tfbs=config["dir"]["regulondb"] + "/{TF}/{TF}_BS.bed"
+	output: 
+            matching_sites = "{peaks}_vs_{TF}_matching_sites.bed",
+            matching_peaks = "{peaks}_vs_{TF}_matching_peaks.bed"
+	log: "{peaks}_vs_{TF}.log"
+	benchmark: "{peaks}_vs_{TF}_benchmark.txt"
+	params: qsub = config["qsub"] + " -e {peaks}_qsub.err -o {peaks}_qsub.out"
+	conda:  "../envs/bedtools.yaml"
+	shell:"""
+        bedtools intersect -a {input.peaks} -b {input.tfbs} -wa | sort -u > {output.matching_peaks} 2> {log}
+        bedtools intersect -a {input.peaks} -b {input.tfbs} -wb | sort -u > {output.matching_sites} 2> {log}
+"""
+

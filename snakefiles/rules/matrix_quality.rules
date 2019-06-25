@@ -1,0 +1,97 @@
+# Check/set parameters
+if not "qsub" in config.keys():
+    sys.exit("The parameter qsub must be defined in the config file")
+
+if not "matrix-quality" in config.keys():
+    config["matrix-quality"] = {}
+     
+if not "regulonDB" in config["dir"].keys():
+   config["dir"]["regulonDB"] = "RegulonDB"
+
+    
+#TF=config["metadata"]["TF"]      ##### TEMP
+
+#if not "background" in config["matrix-quality"].keys():
+#    sys.exit("The parameter matrix-quality/background must be defined in the config file")
+
+#if not "motifs" in config["matrix-quality"].keys():
+#    sys.exit("The parameter matrix-quality/motifs must be defined in the config file")
+
+#if not "x" in config["matrix-quality"].keys():
+#    config["matrix-quality"]["x"] = "..."
+
+#if not "y" in config["matrix-quality"].keys():
+#    sys.exit("The parameter matrix-quality/y must be defined in the config file")
+
+#def matrix_quality_inputs(wildcards):
+#    peak_callers = config["tools"]["peakcalling"]
+#    for pc in peak_callers:
+#        peak_sequences = "..." + pc + ".fasta"
+#    return peak_sequences
+
+# Rule
+rule matrix_quality:
+    """Measuring peak enrichment for motifs.
+    Requires at least 2 sets of peaks and 1 motif database. 
+
+    Find out more @ http://embnet.ccg.unam.mx/rsa-tools/help.matrix-quality.html
+
+    Required parameters:
+        config["qsub"]
+        config["matrix-quality"]["background"]
+        ...
+
+    Optional parameters:
+        ...
+
+    Contributors: Claire Rioualen, Jacques van Helden
+    """
+    input: 
+        matrix = "peaks/{TF}/{TF}_{matrix}.tf",
+        found = "{dir}/{TF}/found/{TF}_peaks_found.fasta",
+        not_found = "{dir}/{TF}/not_found/{TF}_seq_not_found.fasta",
+        new = "{dir}/{TF}/new/{TF}_peaks_new.fasta",
+        upstream = config["dir"]["genome"] + "/upstream.fasta"
+    output: "{dir}/{TF}/{matrix}-quality/{TF}_synthesis.html"
+    params:
+        title = "Matrix-quality",
+        out_prefix = "{dir}/{TF}/{matrix}-quality/{TF}",
+        background = "$RSAT/public_html/data/genomes/Escherichia_coli_K_12_substr__MG1655_uid57779/oligo-frequencies/1nt_upstream-noorf_Escherichia_coli_K_12_substr__MG1655_uid57779-ovlp-1str.freq.gz",
+        qsub = config["qsub"] \
+                + " -e {dir}/{TF}/{matrix}-quality/{TF}_qsub.err" \
+                + " -o {dir}/{TF}/{matrix}-quality/{TF}_qsub.out" 
+    log: "{dir}/{TF}/{matrix}-quality/{TF}_matrix-quality.log"
+    benchmark: "{dir}/{TF}/{matrix}-quality/{TF}_matrix-quality_bench.txt"
+    shell:"""
+matrix-quality -v 0 -html_title {params.title} \
+-archive -o {params.out_prefix} \
+-ms {input.matrix} \
+-matrix_format transfac -pseudo 1 \
+-bgfile {params.background} \
+-bg_format oligo-analysis \
+-seq_format fasta \
+-seq found {input.found} \
+-seq not_found {input.not_found} \
+-seq new {input.new} # -plot upstream nwd -perm upstream 0
+"""
+
+#-seq found {input.found} -plot found nwd -perm found 0 \
+#-seq not_found {input.not_found} -plot not_found nwd -perm not_found 0 \
+#-seq new {input.new} -plot new nwd -perm new 0 \
+#-seq upstream {input.upstream} -plot upstream nwd -perm upstream 0 \
+
+#$RSAT/perl-scripts/matrix-quality  
+#-v 0 
+#-html_title ' Fis '  
+#-ms $RSAT/public_html/tmp/apache/2018/11/13/matrix-quality_2018-11-13.180721_89SnMU/input_matrix 
+#-matrix_format transfac 
+#-pseudo 1 
+#-seq found $RSAT/public_html/tmp/apache/2018/11/13/matrix-quality_2018-11-13.180721_89SnMU/sequence1.fasta 
+#-seq_format fasta -plot found nwd  
+#-seq not_found $RSAT/public_html/tmp/apache/2018/11/13/matrix-quality_2018-11-13.180721_89SnMU/sequence2.fasta 
+#-plot not_found nwd  -perm found 0 -perm not_found 0 
+#-bgfile $RSAT/public_html/data/genomes/Escherichia_coli_K12/oligo-frequencies/1nt_upstream-noorf_Escherichia_coli_K12-ovlp-1str.freq.gz 
+#-bg_format oligo-analysis -bg_pseudo 0.01 
+#-archive -o $RSAT/public_html/tmp/apache/2018/11/13/matrix-quality_2018-11-13.180721_89SnMU/matrix-quality_2018-11-13.180721 
+
+

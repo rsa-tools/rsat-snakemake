@@ -1,0 +1,145 @@
+# Check/set parameters
+if not "qsub" in config.keys():
+    sys.exit("The parameter qsub must be defined in the config file")
+
+if not "peak-motifs" in config.keys():
+    config["peak-motifs"] = {}
+
+#if not "motif_db" in config["peak-motifs"].keys():
+#    sys.exit("The parameter peak-motif:motif_db must be defined in the config file")
+
+if not "python" in config["peak-motifs"].keys():
+    config["peak-motifs"]["python"] = "python2"
+
+if not "motif_db" in config["peak-motifs"].keys():
+    config["peak-motifs"]["motif_db"] = ""
+    
+if not "server" in config["peak-motifs"].keys():
+    config["peak-motifs"]["server"] = "teaching"
+
+if not "tasks" in config["peak-motifs"].keys():
+    config["peak-motifs"]["tasks"] = "all"
+
+if not "disco" in config["peak-motifs"].keys():
+    config["peak-motifs"]["disco"] =  ""
+
+# Rule
+rule peak_motifs:
+    """Motif discovery using the peak-motifs pipeline.
+
+    Find out more @ http://floresta.eead.csic.es/rsat/help.peak-motifs.html
+
+    Required parameters:
+        config["qsub"]
+        config["peak-motifs"]["motif_db"]
+
+    Optional parameters:
+        config["peak-motifs"]["tasks"]
+        config["peak-motifs"]["disco"]
+
+    Contributors: Claire Rioualen, Jacques van Helden 
+    """
+    input: "{dir}/{TF}_{peaks}.fasta"
+    output: 
+#        zip = "{dir}/peak-motifs/{peaks}_peak-motifs.zip",
+        html = "{dir}/peak-motifs/{TF}_{peaks}_synthesis.html",
+        matrices = "{dir}/peak-motifs/results/discovered_motifs/{TF}_{peaks}_motifs_discovered.tf"
+    params:
+        python = config["peak-motifs"]["python"],
+        python_script = "SnakeChunks/scripts/python_lib/peak-motifs_soap.py",
+        title = config["title"],
+        #bed_ctrl = "{dir}_peaks.bed", \
+        tasks = config["peak-motifs"]["tasks"], \
+        server = config["peak-motifs"]["server"], \
+        disco = config["peak-motifs"]["disco"], \
+        motif_db = config["peak-motifs"]["motif_db"], \
+        outdir = "{dir}/peak-motifs", \
+        prefix = "{TF}_{peaks}", \
+        qsub = config["qsub"] + " -e {dir}/peak-motifs/{TF}_{peaks}_qsub.err" \
+                  + " -o {dir}/peak-motifs/{TF}_{peaks}_qsub.out" 
+    log: "{dir}/peak-motifs/{TF}_{peaks}_peak-motifs.log"
+    benchmark: "{dir}/peak-motifs/{TF}_{peaks}_peak-motifs_benchmark.txt"
+    conda: "../envs/peakmotifs.yaml"
+    shell:"""
+{params.python} {params.python_script} -server {params.server} -test {input} -graph_title "{params.title}" -disco {params.disco} -motif_db {params.motif_db} -output both -prefix {params.prefix}
+ 
+# (peak-motifs  -v 1 -title '{params.title}' \
+#  -i {input} \
+#  -markov auto -disco {params.disco} -nmotifs 5  -minol 6 -maxol 7  -no_merge_lengths -2str  -origin center  \
+#  -motif_db {params.motif_db} -scan_markov 1 -source galaxy \
+#  -task purge,seqlen,composition,disco,merge_motifs,split_motifs,motifs_vs_motifs,timelog,archive,synthesis,small_summary,motifs_vs_db,scan \
+#  -prefix {params.prefix} -noov -img_format png  -outdir {params.outdir}) 2> {log} \
+#  || (touch {output.html} && mkdir -p $(dirname {output.matrices}) && touch {output.matrices})
+# 
+
+
+
+# unzip -qq -d `dirname {params.prefix}` {params.prefix}.zip
+# 
+# rm -rf {params.prefix} && mv -f {wildcards.dir}/peak-motifs/peak-motifs_ws_*/ {params.prefix} && rm {params.prefix}.zip
+"""
+
+
+
+#     """
+#     input: "{dir}_vs_{control}_{preprocess}_peaks.fasta"
+#     output: 
+#         html = "{dir}/peak-motifs/{TF}_vs_{control}_{preprocess}/peak-motifs_synthesis.html",
+#         matrices = "{dir}/peak-motifs/{TF}_vs_{control}_{preprocess}/results/discovered_motifs/peak-motifs_motifs_discovered.tf"
+#     params:
+#         python = config["peak-motifs"]["python"],
+#         python_script = "SnakeChunks/scripts/python_lib/peak-motifs_soap.py",
+#         title = config["title"],
+# #        bed_ctrl = "{dir}/{peaks}.bed", \
+#         tasks = config["peak-motifs"]["tasks"], \
+#         disco = config["peak-motifs"]["disco"], \
+#         motif_db = config["peak-motifs"]["motif_db"], \
+#         outdir = "{dir}/peak-motifs", \
+# #        prefix="{peaks}_peak-motifs", \
+#         prefix = "{dir}/peak-motifs/{TF}_vs_{control}_{preprocess}",
+# #        zip = "{dir}/peak-motifs/{TF}_vs_{control}_{preprocess}.zip",
+#         qsub = config["qsub"] + " -e {dir}/peak-motifs/{TF}_vs_{control}_{preprocess}_qsub.err" \
+#                   + " -o {dir}/peak-motifs/{TF}_vs_{control}_{preprocess}_qsub.out" 
+#     log: "{dir}/peak-motifs/{TF}_vs_{control}_{preprocess}_peak-motifs.log"
+#     benchmark: "{dir}/peak-motifs/{TF}_vs_{control}_{preprocess}_peak-motifs_benchmark.txt"
+#     conda: "../envs/peakmotifs.yaml"
+#     shell:"""
+# {params.python} {params.python_script} \
+#    -test {input} \
+#    -graph_title "{params.title}" \
+#    -disco oligos,dyads,positions \
+#    -motif_db regulonDB \
+#    -output both -prefix {params.prefix} \
+#    -server fungi
+# 
+# unzip -qq -d `dirname {params.prefix}` {params.prefix}.zip
+# 
+# rm -rf {params.prefix} && mv -f {wildcards.dir}/peak-motifs/peak-motifs_ws_*/ {params.prefix} && rm {params.prefix}.zip
+# """
+
+#nice -n 19 $RSAT/perl-scripts/peak-motifs -v 1 -title 'LexA' 
+#-i $RSAT/public_html/tmp/apache/2018/11/16/peak-motifs.2018-11-16.151729_2018-11-16.151729_NPjqLs/peak-motifspeak_seq -max_seq_len 1000 
+#-markov auto -disco oligos,dyads,positions -nmotifs 5 -minol 6 -maxol 7 
+#-no_merge_lengths -2str -origin center -motif_db regulonDB 
+#tf $RSAT/public_html/motif_databases/REGULONDB/regulonDB_2015-08-07.tf 
+#-ref_motifs $RSAT/public_html/tmp/apache/2018/11/16/peak-motifs.2018-11-16.151729_2018-11-16.151729_NPjqLs/peak-motifs_ref_motifs.tf 
+#-scan_markov 1 
+#-task purge,seqlen,composition,disco,merge_motifs,split_motifs,motifs_vs_motifs,timelog,archive,synthesis,small_summary,motifs_vs_db,ref_motifs,motifs_vs_ref,scan -prefix peak-motifs 
+#-noov -img_format png 
+#-outdir $RSAT/public_html/tmp/apache/2018/11/16/peak-motifs.2018-11-16.151729_2018-11-16.151729_NPjqLs
+
+
+
+    #shell: "peak-motifs  -v 1 -i  {input} -disco {params.disco} -minol 5 -maxol 7 -motif_db {params.motif_db} -task {params.tasks} -prefix {params.prefix} -outdir {params.outdir} &> {log}"
+
+
+
+#python2 SnakeChunks/scripts/python_lib/peak-motifs_soap.py    -test results/peaks/FadR_vs_WT/FadR_vs_WT_cutadapt_bowtie2_peaks.fasta    -graph_title "Zika project"    -disco dyads    -motif_db regulonDB    -output both -prefix results/peaks/FadR_vs_WT/peak-motifs/FadR_vs_WT_cutadapt_bowtie2    -server fungi
+
+#unzip -qq -d `dirname results/peaks/FadR_vs_WT/peak-motifs/FadR_vs_WT_cutadapt_bowtie2` results/peaks/FadR_vs_WT/peak-motifs/FadR_vs_WT_cutadapt_bowtie2.zip
+
+#rm -rf results/peaks/FadR_vs_WT/peak-motifs/FadR_vs_WT_cutadapt_bowtie2 && mv -f results/peaks/FadR_vs_WT/peak-motifs/peak-motifs_ws_*/ results/peaks/FadR_vs_WT/peak-motifs/FadR_vs_WT_cutadapt_bowtie2 && rm results/peaks/FadR_vs_WT/peak-motifs/FadR_vs_WT_cutadapt_bowtie2.zip
+
+
+
+

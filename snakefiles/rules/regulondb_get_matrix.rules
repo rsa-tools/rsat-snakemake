@@ -1,0 +1,31 @@
+# Set parameters
+if not "qsub" in config.keys():
+    sys.exit("The parameter qsub must be defined in the config file")
+
+#if not "TF" in config["metadata"].keys():
+#    sys.exit("Parameters config['metadata']['TF'] must be defined in the config file to perform the RegulonDB download.")
+
+# Rule
+rule regulondb_get_matrix:
+    """Get TFBS and PSSM from RegulonDB webservice for a given TF or list of TFs.
+        
+    Required parameters:
+        config["qsub"]
+
+    Author: Claire Rioualen
+    """
+#    input: 
+    output: 
+        tab ="{dir}/{TF}/{TF}_matrix.tab",
+        tf ="{dir}/{TF}/{TF}_matrix.tf"
+    params: qsub = config["qsub"] + " -e {dir}/{TF}/{TF}_BS_qsub.err -o {dir}/{TF}/{TF}_BS_qsub.out"
+    log: "{dir}/{TF}/{TF}_BS.log"
+    benchmark: "{dir}/{TF}/{TF}_BS_benchmark.tab"
+    shell:"""
+wget http://regulondb.ccg.unam.mx/webresources/tools/getPSSM?tfObject={wildcards.TF} 
+sed '1d' getPSSM?tfObject={wildcards.TF} > {output.tab}
+convert-matrix  -from tab -to tf -i {output.tab} -pseudo 1 -multiply 1 -decimals 1 -perm 0 \
+-bgfile $RSAT/public_html/data/genomes/Escherichia_coli_K_12_substr__MG1655_uid57779/oligo-frequencies/1nt_upstream-noorf_Escherichia_coli_K_12_substr__MG1655_uid57779-ovlp-1str.freq.gz \
+-bg_format oligos -bg_pseudo 0.01 -return counts,consensus -to tf -o {output.tf}
+rm getPSSM?tfObject={wildcards.TF}
+"""

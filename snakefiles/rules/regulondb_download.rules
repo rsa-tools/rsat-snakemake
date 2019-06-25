@@ -1,0 +1,36 @@
+# Set parameters
+if not "qsub" in config.keys():
+    sys.exit("The parameter qsub must be defined in the config file")
+
+
+# Rule
+rule RegulonDB_download:
+    """Get all TFBSs and PSSMs from RegulonDB webservice.
+        
+    Required parameters:
+        config["qsub"]
+        config["metadata"]["TF"] 
+
+    Author: Claire Rioualen
+    """
+#    input: 
+    output: 
+        all_tus_txt="{dir}/TUSet.txt",
+        all_tfbs_txt="{dir}/BindingSiteSet.txt",
+        all_tfbs_bed="{dir}/BindingSiteSet.bed",
+        all_tfbs_bed_cleaned="{dir}/BindingSiteSet_cleaned.bed",
+        all_gene_products="{dir}/GeneProductSet.txt"
+    params: qsub = config["qsub"] + " -e {dir}/BindingSiteSet_qsub.err -o {dir}/BindingSiteSet_qsub.out"
+    log: "{dir}/BindingSiteSet.log"
+    benchmark: "{dir}/BindingSiteSet_benchmark.tab"
+#    conda: ""
+    shell:"""
+    wget -nc http://regulondb.ccg.unam.mx/menu/download/datasets/files/TUSet.txt -O {output.all_tus_txt} &> {log}
+    wget -nc http://regulondb.ccg.unam.mx/menu/download/datasets/files/BindingSiteSet.txt -O {output.all_tfbs_txt} &> {log}
+    awk '($1 !~ "#") && ($4 != "NA") && ($5 != "NA") && ($4 != 0) && ($5 != 0) {{gsub( "forward", "+"); gsub( "reverse", "-"); print "Chromosome\t"$4-11"\t"$5+10"\t"$3"\t.\t"$6"\t"$2}}' {output.all_tfbs_txt} >  {output.all_tfbs_bed}
+    wget -nc http://regulondb.ccg.unam.mx/menu/download/datasets/files/GeneProductSet.txt -O - | awk -F '\t' '!seen[$1]++' 1> {output.all_gene_products} 2> {log}
+    awk '$2 >= 0' {output.all_tfbs_bed} > {output.all_tfbs_bed_cleaned}
+"""
+
+
+    #    wget -nc http://regulondb.ccg.unam.mx/menu/download/datasets/files/GeneProductSet.txt -O {output.all_gene_products} &> {log}
