@@ -135,7 +135,7 @@ rule all:
     """Run analyses.
     """
     input: \
-        REGULONDB_TF_SITES,
+#        REGULONDB_TF_SITES,
 #            GET_FASTA,
 #            PEAKS_MERGED,
 #            SITES_VS_PEAKS,
