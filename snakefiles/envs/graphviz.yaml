@@ -1,0 +1,11 @@
+---
+name: graphviz
+channels:
+  - conda-forge
+  - defaults
+  - r
+  - bioconda
+dependencies:
+  - graphviz=2.38.0
+  - snakemake=5.1.4
+...
