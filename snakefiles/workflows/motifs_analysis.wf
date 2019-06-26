@@ -141,13 +141,13 @@ rule all:
 #            SITES_VS_PEAKS,
 #            REGULONDB_TF_MATRIX,
 #            PEAK_MOTIFS_ALL,
-        DYAD,
+        DYAD
 #            MATRIX_QUALITY,
 #            MATRIX_CLUSTERING,
 #            PEAK_MOTIFS_COMPARE,
 #            MATRIX_CLUSTERING_COMPARE,
 #            MATRIX_QUALITY_COMPARE,
-            GRAPHICS
+#            GRAPHICS
     params: qsub=config["qsub"]
     log: "_all.log"
     benchmark: "motifs_analysis_all_benchmark.txt"

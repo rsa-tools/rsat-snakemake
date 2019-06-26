@@ -20,12 +20,24 @@ CONFIG=demo_data/config_demo.yml
 TARGET=all
 OPT=
 run_workflow:
-	snakemake -s ${SNAKEFILE} --configfile ${CONFIG} -pk \
+	snakemake -s ${SNAKEFILE} --configfile ${CONFIG} -pk --reason \
 		--use-conda ${TARGET} ${OPT}
 report:
 	snakemake -s ${SNAKEFILE} --configfile ${CONFIG} \
 		all --report workflow_report.html
 
-#		--report workflow_report.html \
-#		 --summary --detailed-summary --reason \
+dag:
+	snakemake -s ${SNAKEFILE} --configfile ${CONFIG} \
+		all --dag > workflow_dag.dot
+	dot -Tpdf workflow_dag.dot > workflow_dag.pdf
+	dot -Tpng workflow_dag.dot > workflow_dag.png
+
+rulegraph:
+	snakemake -s ${SNAKEFILE} --configfile ${CONFIG} \
+		all --rulegraph > workflow_rulegraph.dot
+	dot -Rpdf workflow_rulegraph.dot > workflow_rulegraph.pdf
+	dot -Rpbg workflow_rulegraph.dot > workflow_rulegraph.png
+
+
+#		 --detailed-summary > workflow_detailed-summary.txt 
 #		--stats workflow_stats.json --list-conda-envs \
