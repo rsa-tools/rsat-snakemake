@@ -1,0 +1,34 @@
+
+
+# Check/set parameters
+if not "qsub" in config.keys():
+    sys.exit("The parameter qsub must be defined in the config file")
+
+# Rule
+rule purge_sequence:
+    """Purge sequences ...
+    
+    Required parameters:
+        config["qsub"]
+
+    Contributors: Claire Rioualen, Jacques van Helden 
+    """
+    input:
+        fasta = "{dir}/{TF}_{sites}.fasta"
+    output: 
+        purged = "{dir}/purge-sequence/{TF}_{sites}.fasta.purged",
+    params:
+        qsub = config["qsub"] + " -e {dir}/purge-sequence/{TF}_{sites}_qsub.err" \
+                  + " -o {dir}/purge-sequence/{TF}_{sites}_qsub.out" 
+    log: "{dir}/dyad-analysis/{TF}_{sites}_purge-sequence.log"
+    benchmark: "{dir}/purge-sequence/{TF}_{sites}_purge-sequence_benchmark.txt"
+    shell:"""
+purge-sequence -i {input.fasta} -format fasta -o {output.purged};
+
+"""
+
+# purge-sequence -i peaks/CpxR/CpxR_BS.fasta -format fasta -o peaks/CpxR/CpxR_BS.fasta.purged;
+# dyad-analysis -i peaks/CpxR/CpxR_BS.fasta.purged -v 1 -quick -sort -timeout 3600  -type any -2str -noov -lth occ 0 -uth occ 1 -lth occ_sig 0 -uth rank 50 -return occ,proba,rank -l 3 -spacing 0-20
+
+
+
