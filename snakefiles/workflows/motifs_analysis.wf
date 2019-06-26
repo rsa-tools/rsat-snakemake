@@ -42,16 +42,18 @@ TF_LIST = config["metadata"]["TF"]
 
 wd = os.getcwd()
 
-RULES = os.path.join(wd, "rsat-snakemake", "snakefiles/rules")
+#RULES = os.path.join(wd, "rsat-snakemake", "snakefiles/rules")
+RULES = "../rules"
 
 
 include: os.path.join(RULES, "dot_graph.rules")
 include: os.path.join(RULES, "dot_to_image.rules")
+include: os.path.join(RULES, "download_genome_from_ensembl.rules")
 include: os.path.join(RULES, "dyad_analysis.rules")
 include: os.path.join(RULES, "getfasta.rules")
 include: os.path.join(RULES, "matrix_quality.rules")
-include: os.path.join(RULES, "matrix_clustering.rules")
-include: os.path.join(RULES, "peak_motifs.rules")
+#include: os.path.join(RULES, "matrix_clustering.rules")
+#include: os.path.join(RULES, "peak_motifs.rules")
 include: os.path.join(RULES, "peaks_vs_tfbs.rules")
 include: os.path.join(RULES, "regulondb_download.rules")
 include: os.path.join(RULES, "regulondb_download_one_tf.rules")
@@ -133,25 +135,27 @@ GRAPHICS = expand("flowcharts/ChIP-seq_{graph}.{ext}", graph=["dag", "rulegraph"
 #================================================================#
 
 rule all:
-	"""
-	Run analyses.
-	"""
-	input: \
-            REGULONDB_TF_SITES,
+    """Run analyses.
+    """
+    input: \
+        REGULONDB_TF_SITES,
 #            GET_FASTA,
 #            PEAKS_MERGED,
 #            SITES_VS_PEAKS,
 #            REGULONDB_TF_MATRIX,
 #            PEAK_MOTIFS_ALL,
-			 DYAD,
+        DYAD,
 #            MATRIX_QUALITY,
 #            MATRIX_CLUSTERING,
 #            PEAK_MOTIFS_COMPARE,
 #            MATRIX_CLUSTERING_COMPARE,
 #            MATRIX_QUALITY_COMPARE,
 #            GRAPHICS
-	params: qsub=config["qsub"]
-	shell: "echo Job done    `date '+%Y-%m-%d %H:%M'`"
+    params: qsub=config["qsub"]
+    log: "_all.log"
+    benchmark: "motifs_analysis_all_benchmark.txt"
+    conda: "../envs/all.yaml"
+    shell: "echo Job done    `date '+%Y-%m-%d %H:%M'`"
 
 
 

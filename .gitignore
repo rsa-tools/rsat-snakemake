@@ -1,1 +1,6 @@
 *~
+.snakemake
+RegulonDB
+_all.log
+workflow_report.html
+genome/

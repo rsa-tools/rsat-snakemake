@@ -62,7 +62,7 @@ rule dyad_analysis:
                   + " -o {dir}/dyad-analysis/{TF}_{sites}_qsub.out" 
     log: "{dir}/dyad-analysis/{TF}_{sites}_dyad-analysis.log"
     benchmark: "{dir}/dyad-analysis/{TF}_{sites}_dyad-analysis_benchmark.txt"
-    conda: "../envs/peakmotifs.yaml"
+#    conda: "../envs/dyad_analysis.yaml"
     shell:"""
 purge-sequence -i {input.fasta} -format fasta -o {input.fasta}.purged;
 dyad-analysis -i {input.fasta}.purged -v 1 -quick -sort -timeout 3600  -type any -2str -noov -lth occ 0 -uth occ 1 -lth occ_sig 0 -uth rank 50 -return occ,proba,rank -l 3 -spacing 0-20 > {output.txt}

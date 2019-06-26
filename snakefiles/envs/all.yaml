@@ -1,10 +1,10 @@
 ---
-name: bedtools
+name: all
 channels:
   - bioconda
   - conda-forge
   - defaults
   - r
 dependencies:
-  - bedtools=2.27.1
+  - pandas=0.24.2
 ...

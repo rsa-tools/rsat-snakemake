@@ -6,28 +6,18 @@ Sequences (fasta format) + genomic annotations (gtf format).
 ## working with E.coli, and apparently we don't use these files, we
 ## use the gtf instead.
 
-rule bowtie2_download_genome:
-    """Download and index the reference genome for the Bowtie2
-    read-mapping software from ensembl.
-
-
-    """
-    # output: sequence = config["dir"]["genome"] + "/" + config["genome"]["sequence"] + ".fa", \
-    #         features_gtf = config["dir"]["genome"] + "/" + config["genome"]["features_gtf"] + ".gtf"
-    # log: config["dir"]["genome"] + "/" + "wget_log.txt"
-    # params: sequence_url = config["genome"]["base_url_fasta"] + config["genome"]["sequence"] + ".fa.gz", \
-    #         features_gtf_url = config["genome"]["base_url_gtf"] + config["genome"]["features_gtf"] + ".gtf.gz"
-    output: sequence = config["dir"]["genome"] + "/" + config["genome"]["sequence"] + ".fa", \
-            features_gtf = config["dir"]["genome"] + "/" + config["genome"]["features_gtf"] + ".gtf"
-    log: config["dir"]["genome"] + "/" + "wget_log.txt"
-    params: sequence_url = config["genome"]["base_url_fasta"] + "/" + config["genome"]["sequence"] + ".fa.gz", \
-            features_gtf_url = config["genome"]["base_url_gtf"] + "/" + config["genome"]["features_gtf"] + ".gtf.gz", \
+rule download_genome:
+    """Download genome sequence and annotations"""
+    output: sequence = config["dir"]["genome"] + "/" + config["genome"]["fasta_file"], 
+            gtf = config["dir"]["genome"] + "/" + config["genome"]["gtf_file"]
+    log: config["dir"]["genome"] + "/" + "download_genome_log.txt"
+    params: genome_dir = config["dir"]["genome"], 
+            sequence_url = config["genome"]["fasta_url_base"] + "/" + config["genome"]["fasta_file"] + ".gz", 
+            features_gtf_url = config["genome"]["gtf_url_base"] + "/" + config["genome"]["gtf_file"] + ".gz", 
             qsub = config["qsub"]
-    shell: "wget --timestamping --no-directories " \
-        + " --directory-prefix " + config["dir"]["genome"] + "/" \
-        + " {params.sequence_url}" \
-        + " {params.features_gtf_url}" \
-        + " && gunzip -f " \
-        +  config["dir"]["genome"] + "/" + config["genome"]["sequence"] + ".fa.gz " \
-        +  config["dir"]["genome"] + "/" + config["genome"]["features_gtf"] + ".gtf.gz " \
-        + " &> {log}"
+    shell: """
+    wget --no-directories --no-clobber --directory-prefix {params.genome_dir} {params.sequence_url} {params.features_gtf_url} &> {log}; 
+    gunzip --force {output.sequence}.gz; 
+    gunzip --force {output.gtf}.gz; 
+
+"""
