@@ -17,10 +17,6 @@ import pandas as pd
 from pathlib import Path
 
 
-# 
-# include: os.path.join(GENEREG_LIB, "scripts/python_lib/util.py")
-
-
 #================================================================#
 #           Variables & directories
 #================================================================#
@@ -32,7 +28,7 @@ from pathlib import Path
 # GENOME_GTF = os.path.join(GENOME_DIR, config["genome"]["gtf_file"])
 
 # TF
-#TF_LIST = read_table(config["metadata"]["tf_list"])['TF']
+# TF_LIST = read_table(config["metadata"]["tf_list"])['TF']
 TF_LIST = config["metadata"]["TF"]
 
 
@@ -51,13 +47,14 @@ include: os.path.join(RULES, "dot_to_image.rules")
 include: os.path.join(RULES, "download_genome_from_ensembl.rules")
 include: os.path.join(RULES, "dyad_analysis.rules")
 include: os.path.join(RULES, "getfasta.rules")
-include: os.path.join(RULES, "matrix_quality.rules")
+#include: os.path.join(RULES, "matrix_quality.rules")
 #include: os.path.join(RULES, "matrix_clustering.rules")
 #include: os.path.join(RULES, "peak_motifs.rules")
-include: os.path.join(RULES, "peaks_vs_tfbs.rules")
+#include: os.path.join(RULES, "peaks_vs_tfbs.rules")
+include: os.path.join(RULES, "purge_sequence.rules")
 include: os.path.join(RULES, "regulondb_download.rules")
 include: os.path.join(RULES, "regulondb_download_one_tf.rules")
-include: os.path.join(RULES, "regulondb_get_matrix.rules")
+#include: os.path.join(RULES, "regulondb_get_matrix.rules")
 
 
 #================================================================#
@@ -126,7 +123,7 @@ DYAD     = expand(DATA_DIR + "/{TF}/dyad-analysis/{TF}_sites_report.txt", TF=TF_
 # Flowcharts
 # ----------------------------------------------------------------
 
-GRAPHICS = expand("flowcharts/ChIP-seq_{graph}.{ext}", graph=["dag", "rulegraph"], ext=["png", "pdf", "svg"])
+GRAPHICS = expand("flowcharts/{graph}.{ext}", graph=["dag", "rulegraph"], ext=["png", "pdf", "svg"])
 
 
 
@@ -150,7 +147,7 @@ rule all:
 #            PEAK_MOTIFS_COMPARE,
 #            MATRIX_CLUSTERING_COMPARE,
 #            MATRIX_QUALITY_COMPARE,
-#            GRAPHICS
+            GRAPHICS
     params: qsub=config["qsub"]
     log: "_all.log"
     benchmark: "motifs_analysis_all_benchmark.txt"
