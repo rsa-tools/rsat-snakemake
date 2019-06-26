@@ -21,10 +21,10 @@ TARGET=all
 OPT=
 run_workflow:
 	snakemake -s ${SNAKEFILE} --configfile ${CONFIG} -pk \
-
 		--use-conda ${TARGET} ${OPT}
 report:
-	make -f ${MAKEFILE} run_workflow OPT='--report workflow_report.html' 
+	snakemake -s ${SNAKEFILE} --configfile ${CONFIG} \
+		all --report workflow_report.html
 
 #		--report workflow_report.html \
 #		 --summary --detailed-summary --reason \
