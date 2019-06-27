@@ -24,3 +24,6 @@ dir:
 metadata:
   configfile: "rsat-snakemake/demo_data/config_demo.yml"                         
   TF: "NarL"
+
+dyads:
+  occ_sig: 0
