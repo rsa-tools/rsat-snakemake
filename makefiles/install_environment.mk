@@ -16,12 +16,13 @@ conda_install:
 	conda install -c bioconda snakemake=5.5.2)
 
 SNAKEFILE=snakefiles/workflows/motifs_analysis.wf
-CONFIG=demo_data/config_demo.yml
+CONFIG=snakefiles/workflows/motifs_analysis_config.yaml
 TARGET=all
 OPT=
 run_workflow:
-	snakemake -s ${SNAKEFILE} --configfile ${CONFIG} -pk --reason \
+	snakemake -s ${SNAKEFILE} --configfile ${CONFIG} -p -k --reason \
 		--use-conda ${TARGET} ${OPT}
+
 report:
 	snakemake -s ${SNAKEFILE} --configfile ${CONFIG} \
 		all --report workflow_report.html
