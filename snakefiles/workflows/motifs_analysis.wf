@@ -74,12 +74,14 @@ include: os.path.join(RULES, "regulondb_download_one_tf.rules")
 # PEAK_MOTIFS_ALL     = expand(PEAKS_DIR + "/{TF}/peak-motifs/{TF}_peaks_synthesis.html", TF=TF_LIST)
 # 
 
-DATA_DIR = config["dir"]["regulondb"]
+#DATA_DIR = config["dir"]["regulondb"]
+RESULT_DIR = config["dir"]["results"]
 
-REGULONDB_TF_SITES  = expand(DATA_DIR + "/{TF}/{TF}_sites.fasta", TF=TF_LIST)
-REGULONDB_TF_MATRIX = expand(DATA_DIR + "/{TF}/{TF}_matrix.tf", TF=TF_LIST)
+REGULONDB_TF_SITES  = expand(RESULT_DIR + "/{TF}/{TF}_sites.fasta", TF=TF_LIST)
+REGULONDB_TF_SITES_PURGED  = expand(RESULT_DIR + "/{TF}/{TF}_sites_purged.fasta", TF=TF_LIST)
+REGULONDB_TF_MATRIX = expand(RESULT_DIR + "/{TF}/{TF}_matrix.tf", TF=TF_LIST)
 
-DYAD     = expand(DATA_DIR + "/{TF}/dyad-analysis/{TF}_sites_report.txt", TF=TF_LIST)
+DYADS     = expand(RESULT_DIR + "/{TF}/dyad-analysis/{TF}_sites_purged_dyads.tsv", TF=TF_LIST)
 
 #TF_SITES  = expand("RegulonDB/{TF}/{TF}_sites.bed", TF=TREATMENT)
 #TFBS_MATCHING_PEAKS       = expand(expand(PEAKS_DIR + "/{TF}_vs_{control}/{{peakcaller}}/{TF}_vs_{control}_{{prefix}}_{{peakcaller}}_vs_{{TF}}_matching_peaks.bed", zip, TF=TREATMENT, control=CONTROL), peakcaller=PEAKCALLING_TOOLS, prefix=PREFIX, TF=config["metadata"]["TF"].split())
@@ -130,18 +132,21 @@ GRAPHICS = expand("flowcharts/{graph}.{ext}", graph=["dag", "rulegraph"], ext=["
 #================================================================#
 #                        Rule all                                #
 #================================================================#
-
+print("REGULONDB_TF_SITES\t"  + str(REGULONDB_TF_SITES))
+print("REGULONDB_TF_SITES_PURGED\t"  + str(REGULONDB_TF_SITES_PURGED))
+print("DYADS\t"  + str(DYADS))
 rule all:
     """Run analyses.
     """
-    input: \
-#        REGULONDB_TF_SITES,
+    input: 
+        REGULONDB_TF_SITES,
+        REGULONDB_TF_SITES_PURGED,
 #            GET_FASTA,
+        DYADS
 #            PEAKS_MERGED,
 #            SITES_VS_PEAKS,
 #            REGULONDB_TF_MATRIX,
 #            PEAK_MOTIFS_ALL,
-        DYAD
 #            MATRIX_QUALITY,
 #            MATRIX_CLUSTERING,
 #            PEAK_MOTIFS_COMPARE,

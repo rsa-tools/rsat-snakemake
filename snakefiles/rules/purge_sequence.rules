@@ -14,14 +14,14 @@ rule purge_sequence:
     Contributors: Claire Rioualen, Jacques van Helden 
     """
     input:
-        fasta = "{dir}/{TF}_{sites}.fasta"
+        fasta = "{sequences}.fasta"
     output: 
-        purged = "{dir}/purge-sequence/{TF}_{sites}.fasta.purged",
+        purged = "{sequences}_purged.fasta",
     params:
-        qsub = config["qsub"] + " -e {dir}/purge-sequence/{TF}_{sites}_qsub.err" \
-                  + " -o {dir}/purge-sequence/{TF}_{sites}_qsub.out" 
-    log: "{dir}/dyad-analysis/{TF}_{sites}_purge-sequence.log"
-    benchmark: "{dir}/purge-sequence/{TF}_{sites}_purge-sequence_benchmark.txt"
+        qsub = config["qsub"] + " -e {sequences}_purge-sequence_qsub.err" \
+                  + " -o {sequences}_purge-sequence_qsub.out" 
+    log: "{sequences}_purge-sequence.log"
+    log: "{sequences}_purge-sequence_benchmark.txt"
     shell:"""
 purge-sequence -i {input.fasta} -format fasta -o {output.purged};
 

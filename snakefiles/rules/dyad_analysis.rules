@@ -4,6 +4,13 @@
 if not "qsub" in config.keys():
     sys.exit("The parameter qsub must be defined in the config file")
 
+if not "dyads" in config.keys():
+    config["dyads"] = {}
+
+if not "occ_sig" in config["dyads"].keys():
+    config["dyads"]["occ_sig"] = 0
+    
+
 # Rule
 rule dyad_analysis:
     """Motif discovery using the dyad-analysis pipeline.
@@ -16,17 +23,18 @@ rule dyad_analysis:
     Contributors: Claire Rioualen, Jacques van Helden 
     """
     input:
-        purged = "{dir}/purge-sequence/{TF}_{sites}.fasta.purged"
+        sequences = "{dir}/{sequences}.fasta"
     output: 
-        txt = "{dir}/dyad-analysis/{TF}_{sites}_report.txt",
+        dyads = "{dir}/dyad-analysis/{sequences}_dyads.tsv"
     params:
-        qsub = config["qsub"] + " -e {dir}/dyad-analysis/{TF}_{sites}_qsub.err" \
-                  + " -o {dir}/dyad-analysis/{TF}_{sites}_qsub.out" 
-    log: "{dir}/dyad-analysis/{TF}_{sites}_dyad-analysis.log"
-    benchmark: "{dir}/dyad-analysis/{TF}_{sites}_dyad-analysis_benchmark.txt"
+        qsub = config["qsub"] + " -e {dir}/dyad-analysis/{sequences}_dyad-analysis_qsub.err" \
+                  + " -o  {dir}/dyad-analysis/{sequences}_dyad-analysis_qsub.out",
+        sig = config["dyads"]["occ_sig"]
+    log: "{dir}/dyad-analysis/{sequences}_dyad-analysis.log"
+    benchmark: "{dir}/dyad-analysis/{sequences}_dyad-analysis_benchmark.txt"
 #    conda: "../envs/dyad_analysis.yaml"
     shell:"""
-dyad-analysis -i {input.purged} -v 1 -quick -sort -timeout 3600  -type any -2str -noov -lth occ 0 -uth occ 1 -lth occ_sig 0 -uth rank 50 -return occ,proba,rank -l 3 -spacing 0-20 > {output.txt}
+dyad-analysis -i {input.sequences} -v 1 -sort -timeout 3600  -type any -2str -noov -lth occ 0  -lth occ_sig {params.sig} -uth rank 50 -return occ,proba,rank -l 3 -spacing 0-20 -o {output.dyads} &> {log}
 """
 
 # purge-sequence -i peaks/CpxR/CpxR_BS.fasta -format fasta -o peaks/CpxR/CpxR_BS.fasta.purged;
